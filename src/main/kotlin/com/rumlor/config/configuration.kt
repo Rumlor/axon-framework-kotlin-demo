@@ -22,7 +22,6 @@ import org.axonframework.serialization.Serializer
 import org.axonframework.serialization.json.JacksonSerializer
 
 
-@ApplicationScoped
 @Startup
 class Configuration @Inject constructor(val foodCardProjector: FoodCartProjector){
 
