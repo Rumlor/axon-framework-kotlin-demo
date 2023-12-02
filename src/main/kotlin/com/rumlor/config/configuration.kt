@@ -1,7 +1,7 @@
 package com.rumlor.config
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.rumlor.command.FoodCart
+import com.rumlor.command.FoodCartAggregateRoot
 import com.rumlor.query.FoodCartProjector
 import io.quarkus.runtime.Startup
 import jakarta.annotation.PostConstruct
@@ -53,7 +53,7 @@ class Configuration @Inject constructor(val foodCardProjector: FoodCartProjector
             .configureSerializer{
                 jacksonSerializer()
             }
-            .configureAggregate(FoodCart::class.java)
+            .configureAggregate(FoodCartAggregateRoot::class.java)
             .registerQueryHandler{
                 foodCardProjector
             }
@@ -76,6 +76,6 @@ class Configuration @Inject constructor(val foodCardProjector: FoodCartProjector
 
     @Produces
     @ApplicationScoped
-    fun foodCartRepository():Repository<FoodCart> = config.repository(FoodCart::class.java)
+    fun foodCartRepository():Repository<FoodCartAggregateRoot> = config.repository(FoodCartAggregateRoot::class.java)
 }
 

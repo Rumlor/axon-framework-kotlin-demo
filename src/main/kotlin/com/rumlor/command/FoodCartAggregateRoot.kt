@@ -16,7 +16,7 @@ import org.jboss.logging.Logger
 import java.util.*
 
 @AggregateRoot
-open class FoodCart()  {
+open class FoodCartAggregateRoot()  {
 
     @AggregateIdentifier
     lateinit var foodCartId: UUID

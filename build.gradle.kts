@@ -30,7 +30,7 @@ dependencies {
     implementation("org.axonframework:axon-eventsourcing")
     implementation("org.axonframework:axon-configuration")
     implementation("org.axonframework:axon-server-connector")
-
+    implementation("io.quarkus:quarkus-hibernate-orm")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.16.0")
 
 }

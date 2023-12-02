@@ -1,6 +1,6 @@
 package com.rumlor.query
 
-import com.rumlor.command.FoodCart
+import com.rumlor.command.FoodCartAggregateRoot
 import com.rumlor.events.FoodCartCreatedEvent
 import com.rumlor.events.SelectedProductEvent
 import io.agroal.api.AgroalDataSource
@@ -139,7 +139,7 @@ class FoodCartRepository @Inject constructor(
 @ApplicationScoped
 class FoodCartProjector @Inject constructor(
     val foodCartRepository: FoodCartRepository,
-    val aggregateRepository: Repository<FoodCart>,
+    val aggregateRepository: Repository<FoodCartAggregateRoot>,
     val logger:Logger){
 
     @EventHandler
