@@ -7,10 +7,4 @@ import jakarta.persistence.MappedSuperclass
 import java.util.*
 
 @MappedSuperclass
-open class BaseEntity {
-
-    @Id
-    //@GeneratedValue(strategy = GenerationType.UUID)
-    protected open var id: UUID? = null
-
-}
+open class BaseEntity(@Id open val id: UUID = UUID.randomUUID())

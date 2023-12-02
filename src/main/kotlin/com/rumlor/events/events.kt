@@ -3,7 +3,7 @@ package com.rumlor.events
 import java.util.*
 
 
-data class FoodCartCreatedEvent( val foodCardId: UUID,)
+data class FoodCartCreatedEvent( val foodCardId: UUID)
 
 
 data class SelectedProductEvent(

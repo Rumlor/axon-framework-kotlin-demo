@@ -3,6 +3,7 @@ package com.rumlor.command
 import com.rumlor.api.CreateFoodCartCommand
 import com.rumlor.api.DeSelectProductCommand
 import com.rumlor.api.SelectProductCommand
+import com.rumlor.domain.Product
 import com.rumlor.events.DeSelectedProductEvent
 import com.rumlor.events.FoodCartCreatedEvent
 import com.rumlor.events.SelectedProductEvent
@@ -11,6 +12,7 @@ import org.axonframework.commandhandling.CommandHandler
 import org.axonframework.eventsourcing.EventSourcingHandler
 import org.axonframework.modelling.command.AggregateIdentifier
 import org.axonframework.modelling.command.AggregateLifecycle
+import org.axonframework.modelling.command.AggregateMember
 import org.axonframework.modelling.command.AggregateRoot
 import org.jboss.logging.Logger
 import java.util.*
@@ -19,9 +21,10 @@ import java.util.*
 open class FoodCartAggregateRoot()  {
 
     @AggregateIdentifier
-    lateinit var foodCartId: UUID
+    private lateinit var foodCartId: UUID
 
-    lateinit var selectedProducts:java.util.HashMap<UUID,Int>
+    @AggregateMember
+    private lateinit var products :Set<ProductAggregateMember>
 
     private val logger:Logger = Logger.getLogger("FoodCartAggregate")
 
@@ -41,7 +44,7 @@ open class FoodCartAggregateRoot()  {
     @CommandHandler
     fun on(deSelectProductCommand: DeSelectProductCommand) {
         logger.info("deselect product command arrived: $deSelectProductCommand")
-        if (selectedProducts.containsKey(deSelectProductCommand.productId))
+        if (products.map(Product::id).contains(deSelectProductCommand.productId))
             AggregateLifecycle.apply(DeSelectedProductEvent(foodCartId,deSelectProductCommand.productId,deSelectProductCommand.quantity))
         else
             throw ProductDeSelectionException()

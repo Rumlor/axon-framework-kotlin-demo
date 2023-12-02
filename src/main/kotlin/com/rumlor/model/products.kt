@@ -1,3 +1,3 @@
 package com.rumlor.model
 
-data class SelectProduct(val foodCartId:String,val quantity:Int)
+data class SelectedProduct(val foodCartId:String, val quantity:Int,val productId:String)

@@ -1,20 +1,21 @@
 package com.rumlor.domain
 
+import com.rumlor.query.FoodCartView
 import jakarta.persistence.Entity
 import jakarta.persistence.JoinColumn
-import jakarta.persistence.JoinTable
 import jakarta.persistence.OneToMany
+import java.util.UUID
 
 
 @Entity
-class FoodCart():BaseEntity() {
+class FoodCart(var confirmed:Boolean = false,id:UUID = UUID.randomUUID()):BaseEntity(id) {
 
-    var confirmed:Boolean = false
+    @OneToMany
+    @JoinColumn(name = "food_cart")
+    var foodCartProducts:Set<FoodCartProducts> = HashSet()
 
-    @OneToMany(orphanRemoval = true, targetEntity = Product::class)
-    @JoinTable(name = "food_cart_products",
-        joinColumns = [JoinColumn(name = "food_cart")],
-        inverseJoinColumns = [JoinColumn(name = "product")])
-    var products:Set<Product> = HashSet()
+    companion object {
+        fun from(view: FoodCartView):FoodCart = FoodCart(id = view.foodCartId)
+    }
 
 }

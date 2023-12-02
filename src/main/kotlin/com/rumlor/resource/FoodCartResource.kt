@@ -2,7 +2,7 @@ package com.rumlor.resource
 
 import com.rumlor.api.CreateFoodCartCommand
 import com.rumlor.api.SelectProductCommand
-import com.rumlor.model.SelectProduct
+import com.rumlor.model.SelectedProduct
 import com.rumlor.query.FindFoodCartQuery
 import com.rumlor.query.FoodCartProjector
 import com.rumlor.query.FoodCartView
@@ -40,12 +40,12 @@ class FoodCartResource @Inject constructor(
 
     @POST
     @Path("select")
-    fun selectProduct(selectProduct: SelectProduct):Boolean{
+    fun selectProduct(selectedProduct: SelectedProduct):Boolean{
         commandGateway.send<SelectProductCommand>(
             SelectProductCommand(
-                UUID.fromString(selectProduct.foodCartId),
+                UUID.fromString(selectedProduct.foodCartId),
                 UUID.randomUUID(),
-                selectProduct.quantity))
+                selectedProduct.quantity))
         return true
     }
 
