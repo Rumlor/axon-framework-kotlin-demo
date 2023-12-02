@@ -1,0 +1,40 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apache
+  labels:
+    app: web
+spec:
+  selector:
+    matchLabels:
+      octopusexport: OctopusExport
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: web
+        octopusexport: OctopusExport
+    spec:
+      volumes:
+        - name: demo
+          emptyDir: {}
+      containers:
+        - name: apache
+          volumeMounts:
+            - name: demo
+              mountPath: /etc/what
+          image: bitnami/apache:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          resources:
+            limits:
+              cpu: 200m
+              memory: 150M
+            requests:
+              cpu: 100m
+              memory: 50M
+              
