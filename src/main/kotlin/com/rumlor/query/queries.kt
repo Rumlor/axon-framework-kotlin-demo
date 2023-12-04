@@ -1,5 +1,6 @@
 package com.rumlor.query
 
+import com.rumlor.domain.EventStore
 import com.rumlor.domain.FoodCart
 import com.rumlor.domain.FoodCartProducts
 import com.rumlor.domain.Product
@@ -10,6 +11,7 @@ import jakarta.inject.Inject
 import jakarta.persistence.EntityManager
 import jakarta.transaction.Transactional
 import org.axonframework.eventhandling.EventHandler
+import org.axonframework.messaging.annotation.MessageIdentifier
 import org.axonframework.queryhandling.QueryHandler
 import org.jboss.logging.Logger
 import java.util.*
@@ -21,7 +23,7 @@ class RetrieveProductOptionsQuery
 
 data class FoodCartView(val foodCartId: UUID = UUID.randomUUID(),val products:Set<ProductView> = HashSet(),val confirmed:Boolean=false)
 data class ProductView(val productId:UUID = UUID.randomUUID(),val name:String? = null, val stock:Int? = null)
-data class SelectedProductView(val foodCartId: UUID,val productID:UUID,val quantity:Int)
+data class SelectedProductView(val foodCartProductsId: UUID,val foodCartId: UUID,val productID:UUID,val quantity:Int)
 data class ProductNameAndStockView(val name:String,val stock: Int)
 
 @ApplicationScoped
@@ -43,27 +45,37 @@ class FoodCartRepository @Inject constructor(
     val entityManager: EntityManager){
 
     @Transactional
-    fun save(foodCartView: FoodCartView) {
-        entityManager.find(FoodCart::class.java,foodCartView.foodCartId).let {
-            if (it == null) entityManager.persist(FoodCart.from(foodCartView))
-        }
+    fun save(foodCartView: FoodCartView,messageIdentifier: String) {
+        val event = entityManager.find(EventStore::class.java,UUID.fromString(messageIdentifier))
+        if (event == null)
+            entityManager.find(FoodCart::class.java,foodCartView.foodCartId).let {
+                if (it == null) entityManager.persist(FoodCart.from(foodCartView))
+                entityManager.persist(EventStore(UUID.fromString(messageIdentifier)))
+            }
     }
 
     @Transactional
-    fun save(selectedProduct: SelectedProductView) {
+    fun save(selectedProduct: SelectedProductView,messageIdentifier: String) {
 
-        val foodCart = entityManager.createQuery("select f from  FoodCart f where f.id = ?1 ",FoodCart::class.java)
-            .setParameter(1,selectedProduct.foodCartId)
-            .resultList[0]!!
+        val event = entityManager.find(EventStore::class.java,UUID.fromString(messageIdentifier))
 
-        val foodCartProducts =  foodCart.foodCartProducts.find {
-            it.product?.id == selectedProduct.productID
+        if (event == null){
+            val foodCart = entityManager.createQuery("select f from  FoodCart f where f.id = ?1 ",FoodCart::class.java)
+                .setParameter(1,selectedProduct.foodCartId)
+                .resultList[0]!!
+
+            val foodCartProducts =  foodCart.foodCartProducts.find {
+                it.product?.id == selectedProduct.productID
+            }
+
+            if (foodCartProducts != null){
+                foodCartProducts.quantity = foodCartProducts.quantity.plus(selectedProduct.quantity)
+            } else
+                foodCart.foodCartProducts = foodCart.foodCartProducts.plus(FoodCartProducts(selectedProduct.quantity,foodCart,entityManager.find(Product::class.java,selectedProduct.productID)))
+
+            entityManager.persist(EventStore(UUID.fromString(messageIdentifier)))
         }
 
-        if (foodCartProducts != null){
-            foodCartProducts.quantity = foodCartProducts.quantity.plus(selectedProduct.quantity)
-        } else
-            foodCart.foodCartProducts = foodCart.foodCartProducts.plus(FoodCartProducts(selectedProduct.quantity,foodCart,entityManager.find(Product::class.java,selectedProduct.productID)))
 
     }
 
@@ -88,15 +100,15 @@ class FoodCartProjector @Inject constructor(
     val logger:Logger){
 
     @EventHandler
-    fun on(foodCartCreatedEvent: FoodCartCreatedEvent){
+    fun on(foodCartCreatedEvent: FoodCartCreatedEvent,@MessageIdentifier messageIdentifier:String){
         logger.info("food cart created event arrived:$foodCartCreatedEvent")
-        foodCartRepository.save(FoodCartView(foodCartId =  foodCartCreatedEvent.foodCardId))
+        foodCartRepository.save(FoodCartView(foodCartId =  foodCartCreatedEvent.foodCardId),messageIdentifier)
     }
 
     @EventHandler
-    fun on(selectedProductEvent: SelectedProductEvent){
+    fun on(selectedProductEvent: SelectedProductEvent,@MessageIdentifier messageIdentifier: String){
         logger.info("selected product event arrived:$selectedProductEvent")
-        foodCartRepository.save(SelectedProductView(selectedProductEvent.foodCardId,selectedProductEvent.productId,selectedProductEvent.quantity))
+        foodCartRepository.save(SelectedProductView(selectedProductEvent.foodCartProductsId,selectedProductEvent.foodCardId,selectedProductEvent.productId,selectedProductEvent.quantity),messageIdentifier)
     }
 
     @QueryHandler

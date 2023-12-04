@@ -41,7 +41,7 @@ open class FoodCartAggregateRoot()  {
                 throw ProductDeSelectionException("Not enough stock!!")
 
         logger.info("select product command arrived:$selectProductCommand")
-        AggregateLifecycle.apply(SelectedProductEvent(foodCartId,selectProductCommand.productId,selectProductCommand.name,selectProductCommand.stock,selectProductCommand.quantity))
+        AggregateLifecycle.apply(SelectedProductEvent(UUID.randomUUID(),foodCartId,selectProductCommand.productId,selectProductCommand.name,selectProductCommand.stock,selectProductCommand.quantity))
     }
 
     @CommandHandler
