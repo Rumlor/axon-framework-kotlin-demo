@@ -9,11 +9,7 @@ import com.rumlor.events.SelectedProductEvent
 import com.rumlor.exception.ProductDeSelectionException
 import org.axonframework.commandhandling.CommandHandler
 import org.axonframework.eventsourcing.EventSourcingHandler
-import org.axonframework.modelling.command.AggregateIdentifier
-import org.axonframework.modelling.command.AggregateLifecycle
-import org.axonframework.modelling.command.AggregateMember
-import org.axonframework.modelling.command.AggregateRoot
-import org.axonframework.modelling.command.ForwardMatchingInstances
+import org.axonframework.modelling.command.*
 import org.jboss.logging.Logger
 import java.util.*
 
@@ -68,12 +64,18 @@ open class FoodCartAggregateRoot()  {
     @EventSourcingHandler
     fun on(event: SelectedProductEvent) {
         logger.info("select product  event sourced event arrived: $event")
-        products.plus(ProductAggregateMember(event.productId,event.stock,event.name,event.quantity))
+        products = products.plus(ProductAggregateMember(event.productId,event.stock,event.name,event.quantity))
     }
 
     @EventSourcingHandler
     fun on(event: DeSelectedProductEvent) {
         logger.info("deselect product  event sourced event arrived: $event")
+
+        if (!products.map {
+            it.productId
+        }.contains(event.productId))
+            throw IllegalStateException("product not found in cart.")
+
         products = products.filter {
             it.productId != event.productId
         }.toSet()

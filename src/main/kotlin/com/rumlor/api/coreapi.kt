@@ -7,7 +7,7 @@ class CreateFoodCartCommand
 data class CreateProductCommand(val productId: UUID,val name:String,val stock:Int)
 
 data class SelectProductCommand(
-    @TargetAggregateIdentifier val foodCardId:UUID,
+    @TargetAggregateIdentifier val foodCartId:UUID,
     val productId: UUID,
     val quantity:Int,
     val stock: Int,
@@ -15,7 +15,7 @@ data class SelectProductCommand(
 )
 
 data class DeSelectProductCommand(
-    @TargetAggregateIdentifier val foodCardId:UUID,
+    @TargetAggregateIdentifier val foodCartId:UUID,
     val productId: UUID,
     val quantity:Int
 )

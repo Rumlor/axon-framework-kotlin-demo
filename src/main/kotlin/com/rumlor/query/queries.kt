@@ -4,6 +4,7 @@ import com.rumlor.domain.EventStore
 import com.rumlor.domain.FoodCart
 import com.rumlor.domain.FoodCartProducts
 import com.rumlor.domain.Product
+import com.rumlor.events.DeSelectedProductEvent
 import com.rumlor.events.FoodCartCreatedEvent
 import com.rumlor.events.SelectedProductEvent
 import jakarta.enterprise.context.ApplicationScoped
@@ -24,6 +25,7 @@ class RetrieveProductOptionsQuery
 data class FoodCartView(val foodCartId: UUID = UUID.randomUUID(),val products:Set<ProductView> = HashSet(),val confirmed:Boolean=false)
 data class ProductView(val productId:UUID = UUID.randomUUID(),val name:String? = null, val stock:Int? = null)
 data class SelectedProductView(val foodCartProductsId: UUID,val foodCartId: UUID,val productID:UUID,val quantity:Int)
+data class DeSelectedProductView(val foodCartId: UUID,val productID:UUID,val quantity:Int)
 data class ProductNameAndStockView(val name:String,val stock: Int)
 
 @ApplicationScoped
@@ -40,11 +42,11 @@ class ProductRepository@Inject constructor(
 }
 
 @ApplicationScoped
+@Transactional
 class FoodCartRepository @Inject constructor(
     val logger: Logger,
     val entityManager: EntityManager){
 
-    @Transactional
     fun save(foodCartView: FoodCartView,messageIdentifier: String) {
         val event = entityManager.find(EventStore::class.java,UUID.fromString(messageIdentifier))
         if (event == null)
@@ -54,7 +56,6 @@ class FoodCartRepository @Inject constructor(
             }
     }
 
-    @Transactional
     fun save(selectedProduct: SelectedProductView,messageIdentifier: String) {
 
         val event = entityManager.find(EventStore::class.java,UUID.fromString(messageIdentifier))
@@ -81,7 +82,6 @@ class FoodCartRepository @Inject constructor(
 
     }
 
-    @Transactional
     fun find(uuid: UUID):FoodCartView =
         entityManager.find(FoodCart::class.java,uuid).let {
         FoodCartView(it.id,it.foodCartProducts.map { foodCartProducts ->
@@ -90,6 +90,32 @@ class FoodCartRepository @Inject constructor(
                 stock = foodCartProducts.product?.stock
             )
         }.toSet())
+    }
+
+    fun save(deSelectedProductView: DeSelectedProductView,messageIdentifier: String) {
+
+        val event = entityManager.find(EventStore::class.java,UUID.fromString(messageIdentifier))
+
+        if (event == null){
+            val foodCart = entityManager.createQuery("select f from  FoodCart f where f.id = ?1 ",FoodCart::class.java)
+                .setParameter(1,deSelectedProductView.foodCartId)
+                .resultList[0]!!
+
+            val foodCartProducts =  foodCart.foodCartProducts.find {
+                it.product?.id == deSelectedProductView.productID
+            }
+
+            if (foodCartProducts != null){
+                foodCartProducts.quantity = foodCartProducts.quantity.minus(deSelectedProductView.quantity)
+            } else
+                foodCart.foodCartProducts = foodCart.foodCartProducts.minus(FoodCartProducts(deSelectedProductView.quantity,foodCart,entityManager.find(Product::class.java,deSelectedProductView.productID)))
+            entityManager.find(Product::class.java,deSelectedProductView.productID)?.let {
+                it.stock = it.stock?.plus(deSelectedProductView.quantity)
+            }
+            entityManager.persist(EventStore(UUID.fromString(messageIdentifier)))
+        }
+
+
     }
 
 
@@ -112,7 +138,11 @@ class FoodCartProjector @Inject constructor(
         logger.info("selected product event arrived:$selectedProductEvent")
         foodCartRepository.save(SelectedProductView(selectedProductEvent.foodCartProductsId,selectedProductEvent.foodCardId,selectedProductEvent.productId,selectedProductEvent.quantity),messageIdentifier)
     }
-
+    @EventHandler
+    fun on(deSelectedProductEvent: DeSelectedProductEvent,@MessageIdentifier messageIdentifier: String){
+        logger.info("de-selected product event arrived:$deSelectedProductEvent")
+        foodCartRepository.save(DeSelectedProductView(deSelectedProductEvent.foodCardId,deSelectedProductEvent.productId,deSelectedProductEvent.quantity),messageIdentifier)
+    }
     @QueryHandler
     fun on(findFoodCartQuery: FindFoodCartQuery): FoodCartView {
         logger.info("find food cart query arrived: $findFoodCartQuery")

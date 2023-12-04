@@ -1,12 +1,7 @@
 package com.rumlor.command
 
-import com.rumlor.api.SelectProductCommand
 import com.rumlor.events.DeSelectedProductEvent
-import com.rumlor.events.SelectedProductEvent
-import com.rumlor.exception.InvalidProductStockException
-import org.axonframework.commandhandling.CommandHandler
 import org.axonframework.eventsourcing.EventSourcingHandler
-import org.axonframework.modelling.command.AggregateLifecycle
 import org.axonframework.modelling.command.EntityId
 import org.jboss.logging.Logger
 import java.util.*
@@ -25,8 +20,12 @@ data class ProductAggregateMember(
     @EventSourcingHandler
     fun on(event: DeSelectedProductEvent) {
         logger.info("deselect product event sourced event arrived: $event")
-        stock.plus(event.quantity)
-        quantity.minus(event.quantity)
+        stock = stock.plus(event.quantity)
+
+        if (event.productId != productId || quantity == 0)
+            throw IllegalStateException()
+
+        quantity = quantity.minus(event.quantity)
     }
 
 

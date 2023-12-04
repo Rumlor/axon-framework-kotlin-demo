@@ -1,7 +1,9 @@
 package com.rumlor.resource
 
 import com.rumlor.api.CreateFoodCartCommand
+import com.rumlor.api.DeSelectProductCommand
 import com.rumlor.api.SelectProductCommand
+import com.rumlor.model.DeSelectedProduct
 import com.rumlor.model.SelectedProduct
 import com.rumlor.query.*
 import jakarta.inject.Inject
@@ -47,5 +49,15 @@ class FoodCartResource @Inject constructor(
         return true
     }
 
+    @POST
+    @Path("removeProduct")
+    fun removeProductFromFoodCart(deSelectedProduct: DeSelectedProduct):Boolean{
+        val view = queryGateway.query(FindProductNameAndStockQuery(UUID.fromString(deSelectedProduct.productId)),ProductNameAndStockView::class.java).get()
+        commandGateway.send<DeSelectedProduct>(DeSelectProductCommand(
+            UUID.fromString(deSelectedProduct.foodCartId),
+            UUID.fromString(deSelectedProduct.productId),
+            deSelectedProduct.quantity))
+        return true
+    }
 
 }

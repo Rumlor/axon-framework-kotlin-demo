@@ -11,11 +11,14 @@ import jakarta.inject.Inject
 import org.axonframework.axonserver.connector.AxonServerConfiguration
 import org.axonframework.axonserver.connector.AxonServerConnectionManager
 import org.axonframework.axonserver.connector.command.AxonServerCommandBus
+import org.axonframework.axonserver.connector.event.axon.AxonServerEventStore
 import org.axonframework.commandhandling.SimpleCommandBus
 import org.axonframework.commandhandling.distributed.AnnotationRoutingStrategy
 import org.axonframework.commandhandling.gateway.CommandGateway
+import org.axonframework.config.AggregateConfigurer
 import org.axonframework.config.Configuration
 import org.axonframework.config.DefaultConfigurer
+import org.axonframework.eventsourcing.EventSourcingRepository
 import org.axonframework.modelling.command.Repository
 import org.axonframework.queryhandling.QueryGateway
 import org.axonframework.serialization.Serializer
@@ -53,7 +56,14 @@ class Configuration @Inject constructor(val foodCardProjector: FoodCartProjector
             .configureSerializer{
                 jacksonSerializer()
             }
-            .configureAggregate(FoodCartAggregateRoot::class.java)
+            .configureAggregate(
+                AggregateConfigurer.defaultConfiguration(FoodCartAggregateRoot::class.java)
+                    .configureRepository{
+                        EventSourcingRepository.builder(FoodCartAggregateRoot::class.java)
+                            .eventStore(it.eventStore())
+                            .build()
+                    }
+            )
             .registerQueryHandler{
                 foodCardProjector
             }
