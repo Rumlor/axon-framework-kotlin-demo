@@ -29,20 +29,6 @@ data class ProductAggregateMember(
         quantity.minus(event.quantity)
     }
 
-    @CommandHandler
-    fun on(selectProductCommand: SelectProductCommand){
-        logger.info("select product command arrived:$selectProductCommand")
-        if (selectProductCommand.quantity > stock)
-            throw InvalidProductStockException()
-        AggregateLifecycle.apply(SelectedProductEvent(UUID.randomUUID(),selectProductCommand.foodCardId,productId,name,stock,quantity))
-    }
-
-    @EventSourcingHandler
-    fun on(event: SelectedProductEvent) {
-        logger.info("select product  event sourced event arrived: $event")
-        this.stock = this.stock.minus(event.quantity)
-        this.quantity = this.quantity.plus(event.quantity)
-    }
 
 
 }

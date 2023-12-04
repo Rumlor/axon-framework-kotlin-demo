@@ -72,7 +72,9 @@ class FoodCartRepository @Inject constructor(
                 foodCartProducts.quantity = foodCartProducts.quantity.plus(selectedProduct.quantity)
             } else
                 foodCart.foodCartProducts = foodCart.foodCartProducts.plus(FoodCartProducts(selectedProduct.quantity,foodCart,entityManager.find(Product::class.java,selectedProduct.productID)))
-
+            entityManager.find(Product::class.java,selectedProduct.productID)?.let {
+                it.stock = it.stock?.minus(selectedProduct.quantity)
+            }
             entityManager.persist(EventStore(UUID.fromString(messageIdentifier)))
         }
 

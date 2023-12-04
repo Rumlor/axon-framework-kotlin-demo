@@ -13,6 +13,7 @@ import org.axonframework.modelling.command.AggregateIdentifier
 import org.axonframework.modelling.command.AggregateLifecycle
 import org.axonframework.modelling.command.AggregateMember
 import org.axonframework.modelling.command.AggregateRoot
+import org.axonframework.modelling.command.ForwardMatchingInstances
 import org.jboss.logging.Logger
 import java.util.*
 
@@ -22,7 +23,7 @@ open class FoodCartAggregateRoot()  {
     @AggregateIdentifier
     private lateinit var foodCartId: UUID
 
-    @AggregateMember
+    @AggregateMember(eventForwardingMode = ForwardMatchingInstances::class)
     private lateinit var products :Set<ProductAggregateMember>
 
     private val logger:Logger = Logger.getLogger("FoodCartRoot")
