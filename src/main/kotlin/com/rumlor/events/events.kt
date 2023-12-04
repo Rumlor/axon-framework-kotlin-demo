@@ -4,11 +4,13 @@ import java.util.*
 
 
 data class FoodCartCreatedEvent( val foodCardId: UUID)
-
+data class ProductCreatedEvent(val productId: UUID,val name:String,val stock:Int)
 
 data class SelectedProductEvent(
     val foodCardId: UUID,
     val productId: UUID,
+    val name: String,
+    val stock: Int,
     val quantity:Int
 )
 

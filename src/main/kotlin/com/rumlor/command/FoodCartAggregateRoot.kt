@@ -3,7 +3,6 @@ package com.rumlor.command
 import com.rumlor.api.CreateFoodCartCommand
 import com.rumlor.api.DeSelectProductCommand
 import com.rumlor.api.SelectProductCommand
-import com.rumlor.domain.Product
 import com.rumlor.events.DeSelectedProductEvent
 import com.rumlor.events.FoodCartCreatedEvent
 import com.rumlor.events.SelectedProductEvent
@@ -26,7 +25,7 @@ open class FoodCartAggregateRoot()  {
     @AggregateMember
     private lateinit var products :Set<ProductAggregateMember>
 
-    private val logger:Logger = Logger.getLogger("FoodCartAggregate")
+    private val logger:Logger = Logger.getLogger("FoodCartRoot")
 
     @CommandHandler
     constructor(command: CreateFoodCartCommand):this(){
@@ -37,14 +36,18 @@ open class FoodCartAggregateRoot()  {
 
     @CommandHandler
     fun on(selectProductCommand: SelectProductCommand){
+
+        if (selectProductCommand.quantity > selectProductCommand.stock)
+                throw ProductDeSelectionException("Not enough stock!!")
+
         logger.info("select product command arrived:$selectProductCommand")
-        AggregateLifecycle.apply(SelectedProductEvent(foodCartId,selectProductCommand.productId,selectProductCommand.quantity))
+        AggregateLifecycle.apply(SelectedProductEvent(foodCartId,selectProductCommand.productId,selectProductCommand.name,selectProductCommand.stock,selectProductCommand.quantity))
     }
 
     @CommandHandler
     fun on(deSelectProductCommand: DeSelectProductCommand) {
         logger.info("deselect product command arrived: $deSelectProductCommand")
-        if (products.map(Product::id).contains(deSelectProductCommand.productId))
+        if (products.map(ProductAggregateMember::productId).contains(deSelectProductCommand.productId))
             AggregateLifecycle.apply(DeSelectedProductEvent(foodCartId,deSelectProductCommand.productId,deSelectProductCommand.quantity))
         else
             throw ProductDeSelectionException()
@@ -56,7 +59,7 @@ open class FoodCartAggregateRoot()  {
     fun on(event: FoodCartCreatedEvent) {
         logger.info("food cart create event arrived: $event")
         foodCartId = event.foodCardId
-        selectedProducts = HashMap()
+        products = HashSet()
     }
 
 
@@ -64,12 +67,14 @@ open class FoodCartAggregateRoot()  {
     @EventSourcingHandler
     fun on(event: SelectedProductEvent) {
         logger.info("select product  event sourced event arrived: $event")
-        selectedProducts.merge(event.productId, event.quantity, Int::plus)
+        products.plus(ProductAggregateMember(event.productId,event.stock,event.name,event.quantity))
     }
 
     @EventSourcingHandler
     fun on(event: DeSelectedProductEvent) {
         logger.info("deselect product  event sourced event arrived: $event")
-        selectedProducts.remove(event.productId)
+        products = products.filter {
+            it.productId != event.productId
+        }.toSet()
     }
 }

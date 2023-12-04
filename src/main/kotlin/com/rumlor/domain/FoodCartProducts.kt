@@ -1,17 +1,24 @@
 package com.rumlor.domain
 
-import com.fasterxml.jackson.databind.ser.Serializers.Base
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import java.util.UUID
 
 @Entity
 class FoodCartProducts(
-    val quantity:Int = 0
-):Base() {
+
+    var quantity:Int = 0,
+
+    @ManyToOne(cascade = [CascadeType.PERSIST])
+    @JoinColumn(name = "food_cart")
+    val foodCart: FoodCart? = null,
 
     @ManyToOne
     @JoinColumn(name = "product")
-    var product:Product? = null
+    val product: Product? = null,
 
-}
+    id :UUID = UUID.randomUUID(),
+
+    ):BaseEntity(id)

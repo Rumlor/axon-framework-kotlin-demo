@@ -1,17 +1,17 @@
 package com.rumlor.api
 
 import org.axonframework.modelling.command.TargetAggregateIdentifier
-import java.beans.ConstructorProperties
 import java.util.UUID
 
 class CreateFoodCartCommand
-
-
+data class CreateProductCommand(val productId: UUID,val name:String,val stock:Int)
 
 data class SelectProductCommand(
     @TargetAggregateIdentifier val foodCardId:UUID,
     val productId: UUID,
-    val quantity:Int
+    val quantity:Int,
+    val stock: Int,
+    val name: String
 )
 
 data class DeSelectProductCommand(

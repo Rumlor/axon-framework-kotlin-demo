@@ -16,12 +16,27 @@ import java.util.*
 
 
 data class FindFoodCartQuery(val foodCartId:UUID)
-
+data class FindProductNameAndStockQuery(val productID: UUID)
 class RetrieveProductOptionsQuery
 
 data class FoodCartView(val foodCartId: UUID = UUID.randomUUID(),val products:Set<ProductView> = HashSet(),val confirmed:Boolean=false)
 data class ProductView(val productId:UUID = UUID.randomUUID(),val name:String? = null, val stock:Int? = null)
 data class SelectedProductView(val foodCartId: UUID,val productID:UUID,val quantity:Int)
+data class ProductNameAndStockView(val name:String,val stock: Int)
+
+@ApplicationScoped
+@Transactional
+class ProductRepository@Inject constructor(
+    val logger: Logger,
+    val entityManager: EntityManager){
+
+    fun findProductNameAndStock(findProductNameAndStockQuery: FindProductNameAndStockQuery):ProductNameAndStockView{
+        val query = entityManager.createQuery("select new com.rumlor.query.ProductNameAndStockView(p.name,p.stock) from Product p where p.id = ?1",ProductNameAndStockView::class.java)
+        query.setParameter(1,findProductNameAndStockQuery.productID)
+       return query.resultList[0]
+    }
+}
+
 @ApplicationScoped
 class FoodCartRepository @Inject constructor(
     val logger: Logger,
@@ -29,35 +44,47 @@ class FoodCartRepository @Inject constructor(
 
     @Transactional
     fun save(foodCartView: FoodCartView) {
-        entityManager.persist(FoodCart.from(foodCartView))
+        entityManager.find(FoodCart::class.java,foodCartView.foodCartId).let {
+            if (it == null) entityManager.persist(FoodCart.from(foodCartView))
+        }
     }
 
     @Transactional
     fun save(selectedProduct: SelectedProductView) {
-        entityManager.find(FoodCart::class.java,selectedProduct.foodCartId).let {
-            val foodCartProducts = FoodCartProducts(selectedProduct.quantity)
-            foodCartProducts.product = entityManager.find(Product::class.java,selectedProduct.productID)
-            it.foodCartProducts.plus(foodCartProducts)
+
+        val foodCart = entityManager.createQuery("select f from  FoodCart f where f.id = ?1 ",FoodCart::class.java)
+            .setParameter(1,selectedProduct.foodCartId)
+            .resultList[0]!!
+
+        val foodCartProducts =  foodCart.foodCartProducts.find {
+            it.product?.id == selectedProduct.productID
         }
+
+        if (foodCartProducts != null){
+            foodCartProducts.quantity = foodCartProducts.quantity.plus(selectedProduct.quantity)
+        } else
+            foodCart.foodCartProducts = foodCart.foodCartProducts.plus(FoodCartProducts(selectedProduct.quantity,foodCart,entityManager.find(Product::class.java,selectedProduct.productID)))
+
     }
 
-    fun find(uuid: UUID):FoodCartView = entityManager.find(FoodCart::class.java,uuid).let {
+    @Transactional
+    fun find(uuid: UUID):FoodCartView =
+        entityManager.find(FoodCart::class.java,uuid).let {
         FoodCartView(it.id,it.foodCartProducts.map { foodCartProducts ->
-            ProductView(foodCartProducts.product?.id ?: UUID.randomUUID(),
-                        foodCartProducts.product?.name,
-                        foodCartProducts.product?.stock)
+            ProductView(
+                name = foodCartProducts.product?.name,
+                stock = foodCartProducts.product?.stock
+            )
         }.toSet())
     }
 
 
 }
 
-
-
-
 @ApplicationScoped
 class FoodCartProjector @Inject constructor(
     val foodCartRepository: FoodCartRepository,
+    val productRepository: ProductRepository,
     val logger:Logger){
 
     @EventHandler
@@ -79,5 +106,11 @@ class FoodCartProjector @Inject constructor(
         return foodCartRepository.find(uuid)
     }
 
+
+    @QueryHandler
+    fun on(findProductNameAndStockQuery: FindProductNameAndStockQuery): ProductNameAndStockView {
+        logger.info("find product name and stock query arrived: $findProductNameAndStockQuery")
+        return productRepository.findProductNameAndStock(findProductNameAndStockQuery)
+    }
 
 }
