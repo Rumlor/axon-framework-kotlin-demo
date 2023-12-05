@@ -83,8 +83,8 @@ class FoodCartRepository @Inject constructor(
 
     }
 
-    fun find(uuid: UUID):FoodCartView =
-        entityManager.find(FoodCart::class.java,uuid).let {
+    fun find(uuid: UUID):FoodCartView? =
+        entityManager.find(FoodCart::class.java,uuid.toString())?.let {
         FoodCartView(UUID.fromString(it.id),it.foodCartProducts.map { foodCartProducts ->
             ProductView(
                 name = foodCartProducts.product?.name,
@@ -163,7 +163,7 @@ class FoodCartProjector @Inject constructor(
         foodCartRepository.save(DeSelectedProductView(deSelectedProductEvent.foodCardId,deSelectedProductEvent.productId,deSelectedProductEvent.quantity),messageIdentifier)
     }
     @QueryHandler
-    fun on(findFoodCartQuery: FindFoodCartQuery): FoodCartView {
+    fun on(findFoodCartQuery: FindFoodCartQuery): FoodCartView? {
         logger.info("find food cart query arrived: $findFoodCartQuery")
         val uuid = findFoodCartQuery.foodCartId
         return foodCartRepository.find(uuid)
