@@ -22,8 +22,9 @@ class RetrieveProductOptionsQuery
 
 data class ChangeQuantityView(val foodCardId: UUID, val productId: UUID, val quantity: Int)
 
-data class FoodCartView(val foodCartId: UUID = UUID.randomUUID(),val products:Set<ProductView> = HashSet(),val confirmed:Boolean=false)
+data class FoodCartView(val foodCartId: UUID = UUID.randomUUID(),val products:Set<FoodCartProductView> = HashSet(),val confirmed:Boolean=false)
 data class ProductView(val productId:UUID = UUID.randomUUID(),val name:String? = null, val stock:Int? = null)
+data class FoodCartProductView(val productId:UUID = UUID.randomUUID(),val name:String? = null, val quantity:Int? = null)
 data class SelectedProductView(val foodCartProductsId: UUID,val foodCartId: UUID,val productID:UUID,val quantity:Int)
 data class DeSelectedProductView(val foodCartId: UUID,val productID:UUID,val quantity:Int)
 data class ProductNameAndStockView(val name:String,val stock: Int)
@@ -145,9 +146,9 @@ class FoodCartRepository @Inject constructor(
     fun find(uuid: UUID):FoodCartView? =
         entityManager.find(FoodCart::class.java,uuid.toString())?.let {
             FoodCartView(UUID.fromString(it.id),it.foodCartProducts.map { foodCartProducts ->
-                ProductView(
+                FoodCartProductView(
                     name = foodCartProducts.product?.name,
-                    stock = foodCartProducts.product?.stock
+                    quantity = foodCartProducts.quantity
                 )
             }.toSet())
         }
