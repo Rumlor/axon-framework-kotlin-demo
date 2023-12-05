@@ -24,11 +24,18 @@ data class ProductAggregateMember(
     @CommandHandler
     fun on(command: ChangeFoodCartProductQuantityCommand){
         logger.info("changed food cart product quantity command arrived:$command")
-
-        if (command.newQuantity > stock)
+        val diff = command.newQuantity.minus(quantity)
+        if (diff > stock)
             throw IllegalStateException("quantity can't be higher than stock")
 
         AggregateLifecycle.apply(ChangeQuantityEvent(command.productId,command.foodCartId,command.newQuantity))
+    }
+
+
+    @EventSourcingHandler
+    fun on(event: AddedProductEvent) {
+        logger.info("added product event sourced event arrived: $event")
+        stock = stock.minus(quantity)
     }
 
     @EventSourcingHandler

@@ -14,8 +14,8 @@ data class AddProductCommand(
     val name: String
 )
 data class ChangeFoodCartProductQuantityCommand(
-    @TargetAggregateIdentifier val productId:UUID,
-    val foodCartId: UUID,
+    val productId:UUID,
+    @TargetAggregateIdentifier val foodCartId: UUID,
     val newQuantity:Int
     )
 

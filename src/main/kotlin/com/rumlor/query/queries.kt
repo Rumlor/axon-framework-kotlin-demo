@@ -82,16 +82,6 @@ class FoodCartRepository @Inject constructor(
 
     }
 
-    fun find(uuid: UUID):FoodCartView? =
-        entityManager.find(FoodCart::class.java,uuid.toString())?.let {
-        FoodCartView(UUID.fromString(it.id),it.foodCartProducts.map { foodCartProducts ->
-            ProductView(
-                name = foodCartProducts.product?.name,
-                stock = foodCartProducts.product?.stock
-            )
-        }.toSet())
-    }
-
     fun save(deSelectedProductView: DeSelectedProductView,messageIdentifier: String) {
 
         val event = entityManager.find(EventStore::class.java,messageIdentifier)
@@ -126,7 +116,7 @@ class FoodCartRepository @Inject constructor(
             entityManager.find(FoodCart::class.java,event.foodCardId.toString())?.let {
                 it.confirmed = true
             }
-
+            entityManager.persist(EventStore(UUID.fromString(messageIdentifier)))
         }
     }
 
@@ -147,9 +137,20 @@ class FoodCartRepository @Inject constructor(
                     }
                 }
             }
+            entityManager.persist(EventStore(UUID.fromString(messageIdentifier)))
         }
 
     }
+
+    fun find(uuid: UUID):FoodCartView? =
+        entityManager.find(FoodCart::class.java,uuid.toString())?.let {
+            FoodCartView(UUID.fromString(it.id),it.foodCartProducts.map { foodCartProducts ->
+                ProductView(
+                    name = foodCartProducts.product?.name,
+                    stock = foodCartProducts.product?.stock
+                )
+            }.toSet())
+        }
 
 }
 
