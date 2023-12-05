@@ -4,10 +4,7 @@ import com.rumlor.domain.EventStore
 import com.rumlor.domain.FoodCart
 import com.rumlor.domain.FoodCartProducts
 import com.rumlor.domain.Product
-import com.rumlor.events.ConfirmedOrderEvent
-import com.rumlor.events.RemovedProductEvent
-import com.rumlor.events.FoodCartCreatedEvent
-import com.rumlor.events.AddedProductEvent
+import com.rumlor.events.*
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.persistence.EntityManager
@@ -22,6 +19,8 @@ import java.util.*
 data class FindFoodCartQuery(val foodCartId:UUID)
 data class FindProductNameAndStockQuery(val productID: UUID)
 class RetrieveProductOptionsQuery
+
+data class ChangeQuantityView(val foodCardId: UUID, val productId: UUID, val quantity: Int)
 
 data class FoodCartView(val foodCartId: UUID = UUID.randomUUID(),val products:Set<ProductView> = HashSet(),val confirmed:Boolean=false)
 data class ProductView(val productId:UUID = UUID.randomUUID(),val name:String? = null, val stock:Int? = null)
@@ -131,6 +130,26 @@ class FoodCartRepository @Inject constructor(
         }
     }
 
+    fun save(changeQuantityView: ChangeQuantityView, messageIdentifier: String) {
+        val eventStore = entityManager.find(EventStore::class.java,messageIdentifier)
+
+        if (eventStore == null) {
+            entityManager.find(FoodCart::class.java,changeQuantityView.foodCardId.toString())?.let {
+                val foodCartProducts:FoodCartProducts? = it.foodCartProducts.find {
+                    foodCartProducts -> foodCartProducts.product?.id == changeQuantityView.productId.toString()
+                }
+                if (foodCartProducts != null){
+                    val diff = foodCartProducts.quantity.minus(changeQuantityView.quantity)
+                    foodCartProducts.quantity = changeQuantityView.quantity
+                    entityManager.find(Product::class.java,changeQuantityView.productId.toString())?.let {
+                       product->
+                        product.stock = product.stock?.plus(diff)
+                    }
+                }
+            }
+        }
+
+    }
 
 }
 
@@ -156,6 +175,12 @@ class FoodCartProjector @Inject constructor(
     fun on(event: ConfirmedOrderEvent,@MessageIdentifier messageIdentifier: String){
         logger.info("confirm order event arrived:$event")
         foodCartRepository.save(event,messageIdentifier)
+    }
+
+    @EventHandler
+    fun on(changeQuantityEvent: ChangeQuantityEvent, @MessageIdentifier messageIdentifier: String){
+        logger.info("change product quantity event arrived:$changeQuantityEvent")
+        foodCartRepository.save(ChangeQuantityView(changeQuantityEvent.foodCardId,changeQuantityEvent.productId,changeQuantityEvent.quantity),messageIdentifier)
     }
     @EventHandler
     fun on(removedProductEvent: RemovedProductEvent, @MessageIdentifier messageIdentifier: String){

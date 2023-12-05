@@ -14,6 +14,11 @@ data class AddedProductEvent(
     val stock: Int,
     val quantity:Int
 )
+data class ChangeQuantityEvent(
+    val productId: UUID,
+    val foodCardId: UUID,
+    val quantity:Int
+    )
 
 data class RemovedProductEvent(
      val foodCardId: UUID,

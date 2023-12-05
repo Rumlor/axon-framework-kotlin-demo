@@ -1,9 +1,7 @@
 package com.rumlor.resource
 
-import com.rumlor.api.ConfirmOrderCommand
-import com.rumlor.api.CreateFoodCartCommand
-import com.rumlor.api.RemoveProductCommand
-import com.rumlor.api.AddProductCommand
+import com.rumlor.api.*
+import com.rumlor.model.ChangeProductQuantity
 import com.rumlor.model.DeSelectedProduct
 import com.rumlor.model.SelectedProduct
 import com.rumlor.query.*
@@ -47,6 +45,17 @@ class FoodCartResource @Inject constructor(
             selectedProduct.quantity,
             view.stock,
             view.name))
+        return true
+    }
+
+    @POST
+    @Path("changeProductQuantity")
+    fun changeProductQuantity(changeProductQuantity: ChangeProductQuantity):Boolean{
+        commandGateway.send<Unit>(
+            ChangeFoodCartProductQuantityCommand(
+                UUID.fromString(changeProductQuantity.productId),
+                UUID.fromString(changeProductQuantity.foodCartId),
+                changeProductQuantity.newQuantity))
         return true
     }
 

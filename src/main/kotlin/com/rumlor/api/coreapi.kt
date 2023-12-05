@@ -13,6 +13,11 @@ data class AddProductCommand(
     var stock: Int,
     val name: String
 )
+data class ChangeFoodCartProductQuantityCommand(
+    @TargetAggregateIdentifier val productId:UUID,
+    val foodCartId: UUID,
+    val newQuantity:Int
+    )
 
 data class RemoveProductCommand(
     @TargetAggregateIdentifier val foodCartId:UUID,
