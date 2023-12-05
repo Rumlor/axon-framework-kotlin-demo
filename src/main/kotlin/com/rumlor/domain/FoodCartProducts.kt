@@ -21,4 +21,4 @@ class FoodCartProducts(
 
     id :UUID = UUID.randomUUID(),
 
-    ):BaseEntity(id)
+    ):BaseEntity(id.toString())

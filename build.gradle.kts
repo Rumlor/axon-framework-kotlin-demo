@@ -17,7 +17,7 @@ dependencies {
     implementation("io.quarkus:quarkus-agroal")
     implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
     implementation("io.quarkus:quarkus-kotlin")
-    implementation("io.quarkus:quarkus-jdbc-postgresql")
+    implementation("io.quarkus:quarkus-jdbc-mysql")
     implementation("io.quarkus:quarkus-resteasy-reactive-jackson")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("io.quarkus:quarkus-arc")

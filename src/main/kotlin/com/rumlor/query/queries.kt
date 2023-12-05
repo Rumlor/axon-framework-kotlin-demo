@@ -37,7 +37,7 @@ class ProductRepository@Inject constructor(
 
     fun findProductNameAndStock(findProductNameAndStockQuery: FindProductNameAndStockQuery):ProductNameAndStockView{
         val query = entityManager.createQuery("select new com.rumlor.query.ProductNameAndStockView(p.name,p.stock) from Product p where p.id = ?1",ProductNameAndStockView::class.java)
-        query.setParameter(1,findProductNameAndStockQuery.productID)
+        query.setParameter(1,findProductNameAndStockQuery.productID.toString())
        return query.resultList[0]
     }
 }
@@ -49,9 +49,9 @@ class FoodCartRepository @Inject constructor(
     val entityManager: EntityManager){
 
     fun save(foodCartView: FoodCartView,messageIdentifier: String) {
-        val event = entityManager.find(EventStore::class.java,UUID.fromString(messageIdentifier))
+        val event = entityManager.find(EventStore::class.java,messageIdentifier)
         if (event == null)
-            entityManager.find(FoodCart::class.java,foodCartView.foodCartId).let {
+            entityManager.find(FoodCart::class.java,foodCartView.foodCartId.toString()).let {
                 if (it == null) entityManager.persist(FoodCart.from(foodCartView))
                 entityManager.persist(EventStore(UUID.fromString(messageIdentifier)))
             }
@@ -59,22 +59,22 @@ class FoodCartRepository @Inject constructor(
 
     fun save(selectedProduct: SelectedProductView,messageIdentifier: String) {
 
-        val event = entityManager.find(EventStore::class.java,UUID.fromString(messageIdentifier))
+        val event = entityManager.find(EventStore::class.java,messageIdentifier)
 
         if (event == null){
             val foodCart = entityManager.createQuery("select f from  FoodCart f where f.id = ?1 ",FoodCart::class.java)
-                .setParameter(1,selectedProduct.foodCartId)
+                .setParameter(1,selectedProduct.foodCartId.toString())
                 .resultList[0]!!
 
             val foodCartProducts =  foodCart.foodCartProducts.find {
-                it.product?.id == selectedProduct.productID
+                it.product?.id == selectedProduct.productID.toString()
             }
 
             if (foodCartProducts != null){
                 foodCartProducts.quantity = foodCartProducts.quantity.plus(selectedProduct.quantity)
             } else
-                foodCart.foodCartProducts = foodCart.foodCartProducts.plus(FoodCartProducts(selectedProduct.quantity,foodCart,entityManager.find(Product::class.java,selectedProduct.productID)))
-            entityManager.find(Product::class.java,selectedProduct.productID)?.let {
+                foodCart.foodCartProducts = foodCart.foodCartProducts.plus(FoodCartProducts(selectedProduct.quantity,foodCart,entityManager.find(Product::class.java,selectedProduct.productID.toString())))
+            entityManager.find(Product::class.java,selectedProduct.productID.toString())?.let {
                 it.stock = it.stock?.minus(selectedProduct.quantity)
             }
             entityManager.persist(EventStore(UUID.fromString(messageIdentifier)))
@@ -85,7 +85,7 @@ class FoodCartRepository @Inject constructor(
 
     fun find(uuid: UUID):FoodCartView =
         entityManager.find(FoodCart::class.java,uuid).let {
-        FoodCartView(it.id,it.foodCartProducts.map { foodCartProducts ->
+        FoodCartView(UUID.fromString(it.id),it.foodCartProducts.map { foodCartProducts ->
             ProductView(
                 name = foodCartProducts.product?.name,
                 stock = foodCartProducts.product?.stock
@@ -95,7 +95,7 @@ class FoodCartRepository @Inject constructor(
 
     fun save(deSelectedProductView: DeSelectedProductView,messageIdentifier: String) {
 
-        val event = entityManager.find(EventStore::class.java,UUID.fromString(messageIdentifier))
+        val event = entityManager.find(EventStore::class.java,messageIdentifier)
 
         if (event == null){
             val foodCart = entityManager.createQuery("select f from  FoodCart f where f.id = ?1 ",FoodCart::class.java)
@@ -103,7 +103,7 @@ class FoodCartRepository @Inject constructor(
                 .resultList[0]!!
 
             val foodCartProducts =  foodCart.foodCartProducts.find {
-                it.product?.id == deSelectedProductView.productID
+                it.product?.id == deSelectedProductView.productID.toString()
             }
 
             if (foodCartProducts != null){
@@ -120,11 +120,11 @@ class FoodCartRepository @Inject constructor(
     }
 
     fun save(event: ConfirmedOrderEvent,messageIdentifier: String) {
-        val eventStore = entityManager.find(EventStore::class.java,UUID.fromString(messageIdentifier))
+        val eventStore = entityManager.find(EventStore::class.java,messageIdentifier)
 
         if (eventStore == null){
 
-            entityManager.find(FoodCart::class.java,event.foodCardId)?.let {
+            entityManager.find(FoodCart::class.java,event.foodCardId.toString())?.let {
                 it.confirmed = true
             }
 

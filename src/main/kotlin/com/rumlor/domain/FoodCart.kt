@@ -16,7 +16,7 @@ class FoodCart(
     @OneToMany(targetEntity = FoodCartProducts::class, mappedBy = "foodCart", cascade = [CascadeType.ALL])
     var foodCartProducts:Set<FoodCartProducts> = HashSet(),
 
-    id:UUID = UUID.randomUUID()):BaseEntity(id) {
+    id:UUID = UUID.randomUUID()):BaseEntity(id.toString()) {
 
     companion object {
         fun from(view: FoodCartView):FoodCart = FoodCart(id = view.foodCartId)

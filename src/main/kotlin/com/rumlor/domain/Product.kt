@@ -8,7 +8,7 @@ import java.util.UUID
 class Product(
     var name:String? = null,
               var stock:Int? = null,
-              id:UUID= UUID.randomUUID()) :BaseEntity(id) {
+              id:UUID= UUID.randomUUID()) :BaseEntity(id.toString()) {
     companion object {
         fun from(view:ProductView) = Product(view.name,view.stock)
 
