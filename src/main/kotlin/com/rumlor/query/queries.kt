@@ -4,6 +4,7 @@ import com.rumlor.domain.EventStore
 import com.rumlor.domain.FoodCart
 import com.rumlor.domain.FoodCartProducts
 import com.rumlor.domain.Product
+import com.rumlor.events.ConfirmedOrderEvent
 import com.rumlor.events.DeSelectedProductEvent
 import com.rumlor.events.FoodCartCreatedEvent
 import com.rumlor.events.SelectedProductEvent
@@ -118,6 +119,18 @@ class FoodCartRepository @Inject constructor(
 
     }
 
+    fun save(event: ConfirmedOrderEvent,messageIdentifier: String) {
+        val eventStore = entityManager.find(EventStore::class.java,UUID.fromString(messageIdentifier))
+
+        if (eventStore == null){
+
+            entityManager.find(FoodCart::class.java,event.foodCardId)?.let {
+                it.confirmed = true
+            }
+
+        }
+    }
+
 
 }
 
@@ -137,6 +150,12 @@ class FoodCartProjector @Inject constructor(
     fun on(selectedProductEvent: SelectedProductEvent,@MessageIdentifier messageIdentifier: String){
         logger.info("selected product event arrived:$selectedProductEvent")
         foodCartRepository.save(SelectedProductView(selectedProductEvent.foodCartProductsId,selectedProductEvent.foodCardId,selectedProductEvent.productId,selectedProductEvent.quantity),messageIdentifier)
+    }
+
+    @EventHandler
+    fun on(event: ConfirmedOrderEvent,@MessageIdentifier messageIdentifier: String){
+        logger.info("confirm order event arrived:$event")
+        foodCartRepository.save(event,messageIdentifier)
     }
     @EventHandler
     fun on(deSelectedProductEvent: DeSelectedProductEvent,@MessageIdentifier messageIdentifier: String){

@@ -1,5 +1,6 @@
 package com.rumlor.resource
 
+import com.rumlor.api.ConfirmOrderCommand
 import com.rumlor.api.CreateFoodCartCommand
 import com.rumlor.api.DeSelectProductCommand
 import com.rumlor.api.SelectProductCommand
@@ -57,6 +58,12 @@ class FoodCartResource @Inject constructor(
             UUID.fromString(deSelectedProduct.foodCartId),
             UUID.fromString(deSelectedProduct.productId),
             deSelectedProduct.quantity))
+        return true
+    }
+    @POST
+    @Path("confirm/{uuid}")
+    fun confirmFoodCart(@PathParam("uuid") uuid: String):Boolean{
+        commandGateway.send<Boolean>(ConfirmOrderCommand(UUID.fromString(uuid)))
         return true
     }
 

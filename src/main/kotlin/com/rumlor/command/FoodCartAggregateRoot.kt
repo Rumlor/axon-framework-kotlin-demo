@@ -1,8 +1,10 @@
 package com.rumlor.command
 
+import com.rumlor.api.ConfirmOrderCommand
 import com.rumlor.api.CreateFoodCartCommand
 import com.rumlor.api.DeSelectProductCommand
 import com.rumlor.api.SelectProductCommand
+import com.rumlor.events.ConfirmedOrderEvent
 import com.rumlor.events.DeSelectedProductEvent
 import com.rumlor.events.FoodCartCreatedEvent
 import com.rumlor.events.SelectedProductEvent
@@ -42,6 +44,12 @@ open class FoodCartAggregateRoot()  {
     }
 
     @CommandHandler
+    fun on(command:ConfirmOrderCommand){
+        logger.info("confirm cart command arrived: $command")
+        AggregateLifecycle.apply(ConfirmedOrderEvent(foodCartId))
+    }
+
+    @CommandHandler
     fun on(deSelectProductCommand: DeSelectProductCommand) {
         logger.info("deselect product command arrived: $deSelectProductCommand")
         if (products.map(ProductAggregateMember::productId).contains(deSelectProductCommand.productId))
@@ -66,6 +74,8 @@ open class FoodCartAggregateRoot()  {
         logger.info("select product  event sourced event arrived: $event")
         products = products.plus(ProductAggregateMember(event.productId,event.stock,event.name,event.quantity))
     }
+
+
 
     @EventSourcingHandler
     fun on(event: DeSelectedProductEvent) {
