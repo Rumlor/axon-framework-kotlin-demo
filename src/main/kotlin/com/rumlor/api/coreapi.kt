@@ -6,15 +6,15 @@ import java.util.UUID
 class CreateFoodCartCommand
 data class CreateProductCommand(val productId: UUID,val name:String,val stock:Int)
 
-data class SelectProductCommand(
+data class AddProductCommand(
     @TargetAggregateIdentifier val foodCartId:UUID,
     val productId: UUID,
-    val quantity:Int,
-    val stock: Int,
+    var quantity:Int,
+    var stock: Int,
     val name: String
 )
 
-data class DeSelectProductCommand(
+data class RemoveProductCommand(
     @TargetAggregateIdentifier val foodCartId:UUID,
     val productId: UUID,
     val quantity:Int

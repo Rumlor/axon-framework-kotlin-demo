@@ -5,9 +5,9 @@ import com.rumlor.domain.FoodCart
 import com.rumlor.domain.FoodCartProducts
 import com.rumlor.domain.Product
 import com.rumlor.events.ConfirmedOrderEvent
-import com.rumlor.events.DeSelectedProductEvent
+import com.rumlor.events.RemovedProductEvent
 import com.rumlor.events.FoodCartCreatedEvent
-import com.rumlor.events.SelectedProductEvent
+import com.rumlor.events.AddedProductEvent
 import jakarta.enterprise.context.ApplicationScoped
 import jakarta.inject.Inject
 import jakarta.persistence.EntityManager
@@ -147,9 +147,9 @@ class FoodCartProjector @Inject constructor(
     }
 
     @EventHandler
-    fun on(selectedProductEvent: SelectedProductEvent,@MessageIdentifier messageIdentifier: String){
-        logger.info("selected product event arrived:$selectedProductEvent")
-        foodCartRepository.save(SelectedProductView(selectedProductEvent.foodCartProductsId,selectedProductEvent.foodCardId,selectedProductEvent.productId,selectedProductEvent.quantity),messageIdentifier)
+    fun on(addedProductEvent: AddedProductEvent, @MessageIdentifier messageIdentifier: String){
+        logger.info("selected product event arrived:$addedProductEvent")
+        foodCartRepository.save(SelectedProductView(addedProductEvent.foodCartProductsId,addedProductEvent.foodCardId,addedProductEvent.productId,addedProductEvent.quantity),messageIdentifier)
     }
 
     @EventHandler
@@ -158,9 +158,9 @@ class FoodCartProjector @Inject constructor(
         foodCartRepository.save(event,messageIdentifier)
     }
     @EventHandler
-    fun on(deSelectedProductEvent: DeSelectedProductEvent,@MessageIdentifier messageIdentifier: String){
-        logger.info("de-selected product event arrived:$deSelectedProductEvent")
-        foodCartRepository.save(DeSelectedProductView(deSelectedProductEvent.foodCardId,deSelectedProductEvent.productId,deSelectedProductEvent.quantity),messageIdentifier)
+    fun on(removedProductEvent: RemovedProductEvent, @MessageIdentifier messageIdentifier: String){
+        logger.info("de-selected product event arrived:$removedProductEvent")
+        foodCartRepository.save(DeSelectedProductView(removedProductEvent.foodCardId,removedProductEvent.productId,removedProductEvent.quantity),messageIdentifier)
     }
     @QueryHandler
     fun on(findFoodCartQuery: FindFoodCartQuery): FoodCartView? {

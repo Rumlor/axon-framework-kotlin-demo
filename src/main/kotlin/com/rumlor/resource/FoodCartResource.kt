@@ -2,8 +2,8 @@ package com.rumlor.resource
 
 import com.rumlor.api.ConfirmOrderCommand
 import com.rumlor.api.CreateFoodCartCommand
-import com.rumlor.api.DeSelectProductCommand
-import com.rumlor.api.SelectProductCommand
+import com.rumlor.api.RemoveProductCommand
+import com.rumlor.api.AddProductCommand
 import com.rumlor.model.DeSelectedProduct
 import com.rumlor.model.SelectedProduct
 import com.rumlor.query.*
@@ -33,7 +33,7 @@ class FoodCartResource @Inject constructor(
     @POST
     @Path("create")
     fun createFoodCart():Boolean{
-        commandGateway.send<CreateFoodCartCommand>(CreateFoodCartCommand())
+        commandGateway.send<Unit>(CreateFoodCartCommand())
         return true
     }
 
@@ -41,7 +41,7 @@ class FoodCartResource @Inject constructor(
     @Path("addProduct")
     fun addProductToFoodCart(selectedProduct: SelectedProduct):Boolean{
         val view = queryGateway.query(FindProductNameAndStockQuery(UUID.fromString(selectedProduct.productId)),ProductNameAndStockView::class.java).get()
-        commandGateway.send<SelectedProduct>(SelectProductCommand(
+        commandGateway.send<Unit>(AddProductCommand(
             UUID.fromString(selectedProduct.foodCartId),
             UUID.fromString(selectedProduct.productId),
             selectedProduct.quantity,
@@ -54,7 +54,7 @@ class FoodCartResource @Inject constructor(
     @Path("removeProduct")
     fun removeProductFromFoodCart(deSelectedProduct: DeSelectedProduct):Boolean{
         val view = queryGateway.query(FindProductNameAndStockQuery(UUID.fromString(deSelectedProduct.productId)),ProductNameAndStockView::class.java).get()
-        commandGateway.send<DeSelectedProduct>(DeSelectProductCommand(
+        commandGateway.send<Unit>(RemoveProductCommand(
             UUID.fromString(deSelectedProduct.foodCartId),
             UUID.fromString(deSelectedProduct.productId),
             deSelectedProduct.quantity))
@@ -63,7 +63,7 @@ class FoodCartResource @Inject constructor(
     @POST
     @Path("confirm/{uuid}")
     fun confirmFoodCart(@PathParam("uuid") uuid: String):Boolean{
-        commandGateway.send<Boolean>(ConfirmOrderCommand(UUID.fromString(uuid)))
+        commandGateway.send<Unit>(ConfirmOrderCommand(UUID.fromString(uuid)))
         return true
     }
 
