@@ -2,6 +2,7 @@ package com.rumlor.command
 
 import com.rumlor.api.ChangeFoodCartProductQuantityCommand
 import com.rumlor.api.RemoveProductCommand
+import com.rumlor.api.RemoveProductDeductQuantityCommand
 import com.rumlor.events.AddedProductEvent
 import com.rumlor.events.ChangeQuantityEvent
 import com.rumlor.events.RemovedProductAppliedEvent
@@ -29,7 +30,7 @@ data class ProductAggregateMember(
     }
 
     @CommandHandler
-    fun on(removeProductCommand: RemoveProductCommand) {
+    fun on(removeProductCommand: RemoveProductDeductQuantityCommand) {
 
         logger.info("remove product command arrived: $removeProductCommand")
 

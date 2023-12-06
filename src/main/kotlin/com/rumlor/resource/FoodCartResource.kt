@@ -63,10 +63,17 @@ class FoodCartResource @Inject constructor(
     @Path("removeProduct")
     fun removeProductFromFoodCart(deSelectedProduct: DeSelectedProduct):Boolean{
         val view = queryGateway.query(FindProductNameAndStockQuery(UUID.fromString(deSelectedProduct.productId)),ProductNameAndStockView::class.java).get()
+
         commandGateway.send<Unit>(RemoveProductCommand(
             UUID.fromString(deSelectedProduct.foodCartId),
             UUID.fromString(deSelectedProduct.productId),
             deSelectedProduct.quantity))
+
+        commandGateway.send<Unit>(RemoveProductDeductQuantityCommand(
+            UUID.fromString(deSelectedProduct.foodCartId),
+            UUID.fromString(deSelectedProduct.productId),
+            deSelectedProduct.quantity))
+
         return true
     }
     @POST

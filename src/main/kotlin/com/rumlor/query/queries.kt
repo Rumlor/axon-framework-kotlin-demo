@@ -88,9 +88,9 @@ class FoodCartRepository @Inject constructor(
         val event = entityManager.find(EventStore::class.java,messageIdentifier)
 
         if (event == null){
-            val foodCart = entityManager.createQuery("select f from  FoodCart f where f.id = ?1 ",FoodCart::class.java)
-                .setParameter(1,deSelectedProductView.foodCartId)
-                .resultList[0]!!
+
+            val foodCart: FoodCart = entityManager.find(FoodCart::class.java,deSelectedProductView.foodCartId.toString())
+                ?: throw IllegalStateException("no food cart found with given food cart id")
 
             val foodCartProducts =  foodCart.foodCartProducts.find {
                 it.product?.id == deSelectedProductView.productID.toString()
@@ -99,11 +99,12 @@ class FoodCartRepository @Inject constructor(
             if (foodCartProducts != null){
                 foodCartProducts.quantity = foodCartProducts.quantity.minus(deSelectedProductView.quantity)
             } else
-                foodCart.foodCartProducts = foodCart.foodCartProducts.minus(FoodCartProducts(deSelectedProductView.quantity,foodCart,entityManager.find(Product::class.java,deSelectedProductView.productID)))
-            entityManager.find(Product::class.java,deSelectedProductView.productID)?.let {
+                foodCart.foodCartProducts = foodCart.foodCartProducts.minus(FoodCartProducts(deSelectedProductView.quantity,foodCart,entityManager.find(Product::class.java,deSelectedProductView.productID.toString())))
+            entityManager.find(Product::class.java,deSelectedProductView.productID.toString())?.let {
                 it.stock = it.stock?.plus(deSelectedProductView.quantity)
             }
             entityManager.persist(EventStore(UUID.fromString(messageIdentifier)))
+
         }
 
 

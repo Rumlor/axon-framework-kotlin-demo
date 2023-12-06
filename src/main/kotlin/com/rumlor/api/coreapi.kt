@@ -25,6 +25,12 @@ data class RemoveProductCommand(
     val quantity:Int
 )
 
+data class RemoveProductDeductQuantityCommand(
+    @TargetAggregateIdentifier val foodCartId:UUID,
+    val productId: UUID,
+    val quantity:Int
+)
+
 data class ConfirmOrderCommand(
     @TargetAggregateIdentifier val foodCardId: UUID
 )

@@ -36,7 +36,7 @@ open class FoodCartAggregateRoot()  {
         AggregateLifecycle.apply(FoodCartCreatedEvent(UUID.randomUUID()))
     }
 
-    fun findProduct(productId:UUID):ProductAggregateMember?{
+    private fun findProduct(productId:UUID):ProductAggregateMember?{
         return products.find { it.productId == productId }
     }
 
