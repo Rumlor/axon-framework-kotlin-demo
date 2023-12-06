@@ -36,6 +36,9 @@ open class FoodCartAggregateRoot()  {
         AggregateLifecycle.apply(FoodCartCreatedEvent(UUID.randomUUID()))
     }
 
+    fun findProduct(productId:UUID):ProductAggregateMember?{
+        return products.find { it.productId == productId }
+    }
 
     @CommandHandler
     fun on(addProductCommand: AddProductCommand){
@@ -62,10 +65,17 @@ open class FoodCartAggregateRoot()  {
             throw IllegalStateException("Can't de-select product if cart is confirmed")
 
         logger.info("remove product command arrived: $removeProductCommand")
-        if (products.map(ProductAggregateMember::productId).contains(removeProductCommand.productId))
-            AggregateLifecycle.apply(RemovedProductEvent(foodCartId,removeProductCommand.productId,removeProductCommand.quantity))
-        else
-            throw ProductDeSelectionException()
+
+        findProduct(removeProductCommand.productId)
+            ?: throw ProductDeSelectionException("product not found in cart with given product id")
+
+        AggregateLifecycle.apply(
+            RemovedProductEvent(
+                foodCartId,
+                removeProductCommand.productId,
+                removeProductCommand.quantity
+            )
+        )
     }
 
 
@@ -89,16 +99,11 @@ open class FoodCartAggregateRoot()  {
 
     @EventSourcingHandler
     fun on(event: RemovedProductEvent) {
-        logger.info("deselect product  event sourced event arrived: $event")
+        logger.info("remove product event sourced event arrived: $event")
+        val product = findProduct(productId = event.productId)!!
 
-        if (!products.map {
-                it.productId
-            }.contains(event.productId))
-            throw IllegalStateException("product not found in cart.")
-
-        products.find { it.productId == event.productId}?.let {
-            products = products.minus(it)
-        }
+        if (product.isQuantityZero())
+            products = products.minus(product)
 
     }
 

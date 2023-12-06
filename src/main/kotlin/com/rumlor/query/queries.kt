@@ -185,7 +185,7 @@ class FoodCartProjector @Inject constructor(
         foodCartRepository.save(ChangeQuantityView(changeQuantityEvent.foodCardId,changeQuantityEvent.productId,changeQuantityEvent.quantity),messageIdentifier)
     }
     @EventHandler
-    fun on(removedProductEvent: RemovedProductEvent, @MessageIdentifier messageIdentifier: String){
+    fun on(removedProductEvent: RemovedProductAppliedEvent, @MessageIdentifier messageIdentifier: String){
         logger.info("de-selected product event arrived:$removedProductEvent")
         foodCartRepository.save(DeSelectedProductView(removedProductEvent.foodCardId,removedProductEvent.productId,removedProductEvent.quantity),messageIdentifier)
     }

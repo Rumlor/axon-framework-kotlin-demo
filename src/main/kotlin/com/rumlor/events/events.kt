@@ -26,6 +26,12 @@ data class RemovedProductEvent(
      val quantity:Int
 )
 
+data class RemovedProductAppliedEvent(
+    val foodCardId: UUID,
+    val productId: UUID,
+    val quantity:Int
+)
+
 data class ConfirmedOrderEvent(
      val foodCardId: UUID
 )
