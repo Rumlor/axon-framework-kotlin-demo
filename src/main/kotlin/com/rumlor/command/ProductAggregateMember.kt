@@ -30,7 +30,7 @@ data class ProductAggregateMember(
     }
 
     @CommandHandler
-    fun on(removeProductCommand: RemoveProductDeductQuantityCommand) {
+    fun handle(removeProductCommand: RemoveProductDeductQuantityCommand) {
 
         logger.info("remove product command arrived: $removeProductCommand")
 
@@ -50,7 +50,7 @@ data class ProductAggregateMember(
         )
     }
     @CommandHandler
-    fun on(command: ChangeFoodCartProductQuantityCommand){
+    fun handle(command: ChangeFoodCartProductQuantityCommand){
         logger.info("changed food cart product quantity command arrived:$command")
         val diff = command.newQuantity.minus(quantity)
         if (diff > stock)
@@ -58,14 +58,11 @@ data class ProductAggregateMember(
 
         AggregateLifecycle.apply(ChangeQuantityEvent(command.productId,command.foodCartId,command.newQuantity))
     }
-
-
     @EventSourcingHandler
     fun on(event: AddedProductEvent) {
         logger.info("added product event sourced event arrived: $event")
         stock = stock.minus(quantity)
     }
-
     @EventSourcingHandler
     fun on(event: RemovedProductAppliedEvent) {
         logger.info("remove product applied event sourced event arrived: $event")
@@ -73,7 +70,6 @@ data class ProductAggregateMember(
         stock = stock.plus(event.quantity)
         quantity = quantity.minus(event.quantity)
     }
-
     @EventSourcingHandler
     fun on(event: ChangeQuantityEvent){
         logger.info("changed food cart product quantity event arrived:$event")
