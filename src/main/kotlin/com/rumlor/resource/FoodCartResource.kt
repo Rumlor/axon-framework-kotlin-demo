@@ -10,10 +10,12 @@ import jakarta.ws.rs.GET
 import jakarta.ws.rs.POST
 import jakarta.ws.rs.Path
 import jakarta.ws.rs.PathParam
+import org.axonframework.commandhandling.CommandResultMessage
 import org.axonframework.commandhandling.gateway.CommandGateway
 import org.axonframework.queryhandling.QueryGateway
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Future
 
 @Path("/api/footcart")
 class FoodCartResource @Inject constructor(
@@ -30,22 +32,20 @@ class FoodCartResource @Inject constructor(
 
     @POST
     @Path("create")
-    fun createFoodCart():Boolean{
-        commandGateway.send<Unit>(CreateFoodCartCommand())
-        return true
+    fun createFoodCart():Future<Boolean>{
+         return commandGateway.send(CreateFoodCartCommand())
     }
 
     @POST
     @Path("addProduct")
-    fun addProductToFoodCart(selectedProduct: SelectedProduct):Boolean{
+    fun addProductToFoodCart(selectedProduct: SelectedProduct):Future<Boolean>{
         val view = queryGateway.query(FindProductNameAndStockQuery(UUID.fromString(selectedProduct.productId)),ProductNameAndStockView::class.java).get()
-        commandGateway.send<Unit>(AddProductCommand(
+        return commandGateway.send(AddProductCommand(
             UUID.fromString(selectedProduct.foodCartId),
             UUID.fromString(selectedProduct.productId),
             selectedProduct.quantity,
             view.stock,
             view.name))
-        return true
     }
 
     @POST
@@ -67,12 +67,15 @@ class FoodCartResource @Inject constructor(
         commandGateway.send<Unit>(RemoveProductCommand(
             UUID.fromString(deSelectedProduct.foodCartId),
             UUID.fromString(deSelectedProduct.productId),
-            deSelectedProduct.quantity))
+            deSelectedProduct.quantity)).thenApply {
 
-        commandGateway.send<Unit>(RemoveProductDeductQuantityCommand(
-            UUID.fromString(deSelectedProduct.foodCartId),
-            UUID.fromString(deSelectedProduct.productId),
-            deSelectedProduct.quantity))
+            commandGateway.send<Unit>(RemoveProductDeductQuantityCommand(
+                UUID.fromString(deSelectedProduct.foodCartId),
+                UUID.fromString(deSelectedProduct.productId),
+                deSelectedProduct.quantity))
+
+        }
+
 
         return true
     }

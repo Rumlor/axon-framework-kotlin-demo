@@ -9,6 +9,7 @@ import com.rumlor.events.RemovedProductEvent
 import com.rumlor.events.FoodCartCreatedEvent
 import com.rumlor.events.AddedProductEvent
 import com.rumlor.exception.ProductDeSelectionException
+import org.axonframework.commandhandling.CommandExecutionException
 import org.axonframework.commandhandling.CommandHandler
 import org.axonframework.eventsourcing.EventSourcingHandler
 import org.axonframework.modelling.command.*
@@ -45,10 +46,10 @@ open class FoodCartAggregateRoot()  {
     @CommandHandler
     fun handle(addProductCommand: AddProductCommand){
         if (confirmed)
-            throw IllegalStateException("Can't select product if cart is confirmed")
+            throw CommandExecutionException("Can't select product if cart is confirmed",ProductDeSelectionException())
 
         if (addProductCommand.quantity > addProductCommand.stock)
-                throw ProductDeSelectionException("Not enough stock!!")
+            throw CommandExecutionException("not enough stock",ProductDeSelectionException())
 
         logger.info("add product command arrived:$addProductCommand")
         AggregateLifecycle.apply(AddedProductEvent(addProductCommand.productId,foodCartId,addProductCommand.productId,addProductCommand.name,addProductCommand.stock,addProductCommand.quantity))
