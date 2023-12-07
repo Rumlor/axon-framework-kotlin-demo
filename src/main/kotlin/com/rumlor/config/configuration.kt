@@ -18,6 +18,7 @@ import org.axonframework.commandhandling.gateway.CommandGateway
 import org.axonframework.config.AggregateConfigurer
 import org.axonframework.config.Configuration
 import org.axonframework.config.DefaultConfigurer
+import org.axonframework.eventsourcing.EventCountSnapshotTriggerDefinition
 import org.axonframework.eventsourcing.EventSourcingRepository
 import org.axonframework.modelling.command.Repository
 import org.axonframework.queryhandling.QueryGateway
@@ -62,6 +63,9 @@ class Configuration @Inject constructor(val foodCardProjector: FoodCartProjector
                         EventSourcingRepository.builder(FoodCartAggregateRoot::class.java)
                             .eventStore(it.eventStore())
                             .build()
+                    }
+                    .configureSnapshotTrigger{
+                        EventCountSnapshotTriggerDefinition(it.snapshotter(),5)
                     }
             )
             .registerQueryHandler{
