@@ -22,14 +22,14 @@ import kotlin.properties.Delegates
 open class FoodCartAggregateRoot()  {
 
     @AggregateIdentifier
-    private lateinit var foodCartId: UUID
+    lateinit var foodCartId: UUID
 
     @AggregateMember(eventForwardingMode = ForwardMatchingInstances::class)
-    private lateinit var products :Set<ProductAggregateMember>
+    lateinit var products :Set<ProductAggregateMember>
 
-    private var confirmed by Delegates.notNull<Boolean>()
+    var confirmed by Delegates.notNull<Boolean>()
 
-    private val logger:Logger = Logger.getLogger("FoodCartRoot")
+    val logger:Logger = Logger.getLogger("FoodCartRoot")
 
 
     private fun findProduct(productId:UUID):ProductAggregateMember?{

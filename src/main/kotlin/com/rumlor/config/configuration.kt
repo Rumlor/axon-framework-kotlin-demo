@@ -27,7 +27,7 @@ import org.axonframework.serialization.json.JacksonSerializer
 
 
 @Startup
-class Configuration @Inject constructor(val foodCardProjector: FoodCartProjector){
+class Configuration @Inject constructor(private val foodCardProjector: FoodCartProjector){
 
     private lateinit var config: Configuration
 
@@ -58,14 +58,13 @@ class Configuration @Inject constructor(val foodCardProjector: FoodCartProjector
                 jacksonSerializer()
             }
             .configureAggregate(
-                AggregateConfigurer.defaultConfiguration(FoodCartAggregateRoot::class.java)
+                AggregateConfigurer
+                    .defaultConfiguration(FoodCartAggregateRoot::class.java)
                     .configureRepository{
                         EventSourcingRepository.builder(FoodCartAggregateRoot::class.java)
                             .eventStore(it.eventStore())
+                            .snapshotTriggerDefinition(EventCountSnapshotTriggerDefinition(it.snapshotter(),5))
                             .build()
-                    }
-                    .configureSnapshotTrigger{
-                        EventCountSnapshotTriggerDefinition(it.snapshotter(),5)
                     }
             )
             .registerQueryHandler{

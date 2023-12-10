@@ -1,12 +1,10 @@
 package com.rumlor.command
 
 import com.rumlor.api.ChangeFoodCartProductQuantityCommand
-import com.rumlor.api.RemoveProductCommand
 import com.rumlor.api.RemoveProductDeductQuantityCommand
 import com.rumlor.events.AddedProductEvent
 import com.rumlor.events.ChangeQuantityEvent
 import com.rumlor.events.RemovedProductAppliedEvent
-import com.rumlor.events.RemovedProductEvent
 import com.rumlor.exception.ProductDeSelectionException
 import org.axonframework.commandhandling.CommandHandler
 import org.axonframework.eventsourcing.EventSourcingHandler
@@ -18,8 +16,8 @@ import java.util.*
 data class ProductAggregateMember(
     @EntityId
     var productId: UUID,
-    private var stock :Int,
-    private  var name:String,
+    var stock :Int,
+    var name:String,
     var quantity:Int
 ) {
 
