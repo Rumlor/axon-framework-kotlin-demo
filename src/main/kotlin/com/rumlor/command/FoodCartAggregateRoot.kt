@@ -29,7 +29,7 @@ open class FoodCartAggregateRoot()  {
 
     var confirmed by Delegates.notNull<Boolean>()
 
-    val logger:Logger = Logger.getLogger("FoodCartRoot")
+    private val logger:Logger = Logger.getLogger("FoodCartRoot")
 
 
     private fun findProduct(productId:UUID):ProductAggregateMember?{

@@ -1,5 +1,6 @@
 package com.rumlor.command
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.rumlor.api.ChangeFoodCartProductQuantityCommand
 import com.rumlor.api.RemoveProductDeductQuantityCommand
 import com.rumlor.events.AddedProductEvent
@@ -23,6 +24,7 @@ data class ProductAggregateMember(
 
     private val logger: Logger = Logger.getLogger("ProductMember")
 
+    @JsonIgnore
     fun isQuantityZero():Boolean{
         return quantity == 0
     }

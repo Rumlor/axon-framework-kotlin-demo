@@ -148,6 +148,7 @@ class FoodCartRepository @Inject constructor(
         entityManager.find(FoodCart::class.java,uuid.toString())?.let {
             FoodCartView(UUID.fromString(it.id),it.foodCartProducts.map { foodCartProducts ->
                 FoodCartProductView(
+                    productId = UUID.fromString(foodCartProducts.product?.id),
                     name = foodCartProducts.product?.name,
                     quantity = foodCartProducts.quantity
                 )
